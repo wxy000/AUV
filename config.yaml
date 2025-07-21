@@ -1,0 +1,28 @@
+server:
+  port: "8080"
+  limit_rate: 20
+  # 静态文件服务
+  # 默认/v1（必填）
+  static_prefix: "/v1"
+
+database:
+  host: "118.178.241.13"
+  port: 3306
+  user: "auv"
+  password: "xBwKba5iFhbszSwK"
+  name: "auv"
+  ssl_mode: "disable"
+
+admin:
+  username: "admin"
+  password: "admin123"
+
+user:
+  default_password: "123456"
+
+jwt:
+  secret: "your_jwt_secret"
+  expires_hours: 24
+  refresh_window_hours: 1
+
+hitokoto_file: "public/other/hitokoto.txt"
