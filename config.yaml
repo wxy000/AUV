@@ -10,7 +10,7 @@ database:
   driver: "sqlite"
   sqlite:
     # SQLite数据库文件路径
-    path: "./db/auv.db"
+    path: "./auv.db"
   mysql:
     host: "localhost"
     port: 3306
