@@ -8,12 +8,18 @@ import (
 
 type AppConfig struct {
 	DB struct {
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
-		Name     string `yaml:"name"`
-		SSLMode  string `yaml:"ssl_mode"`
+		Driver string `yaml:"driver"`
+		Sqlite struct {
+			Path string `yaml:"path"`
+		} `yaml:"sqlite"`
+		Mysql struct {
+			Host     string `yaml:"host"`
+			Port     int    `yaml:"port"`
+			User     string `yaml:"user"`
+			Password string `yaml:"password"`
+			Name     string `yaml:"name"`
+			SSLMode  string `yaml:"ssl_mode"`
+		} `yaml:"mysql"`
 	} `yaml:"database"`
 	Server struct {
 		Port         string `yaml:"port"`

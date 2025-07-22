@@ -10,22 +10,42 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB // 已导出为公共变量
+var (
+	DB     *gorm.DB // 已导出为公共变量
+	DBType string   // 数据库类型：mysql 或 sqlite
+)
 
 func InitDB(cfg *config.AppConfig) error {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		cfg.DB.User, cfg.DB.Password, cfg.DB.Host, cfg.DB.Port, cfg.DB.Name)
+	var dsn string
+	var dialector gorm.Dialector
+
+	switch cfg.DB.Driver {
+	case "mysql":
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+			cfg.DB.Mysql.User, cfg.DB.Mysql.Password, cfg.DB.Mysql.Host, cfg.DB.Mysql.Port, cfg.DB.Mysql.Name)
+		dialector = mysql.Open(dsn)
+	case "sqlite":
+		dsn = cfg.DB.Sqlite.Path
+		// SQLite默认连接参数
+		if dsn == "" {
+			dsn = "file:auv.db?cache=shared&_fk=1"
+		}
+		dialector = sqlite.Open(dsn)
+	default:
+		return fmt.Errorf("unsupported database driver: %s", cfg.DB.Driver)
+	}
 
 	var err error
-
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to connect database: %w", err)
 	}
 
+	DBType = cfg.DB.Driver
 	sqlDB, _ := DB.DB()
 
 	// 设置连接池，空闲连接
@@ -46,7 +66,11 @@ func AutoMigrate() {
 		log.Fatal("数据库连接未初始化，请先调用InitDB")
 	}
 
-	err := DB.Set("gorm:table_options", "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4").AutoMigrate(&models.User{})
+	tableOptions := ""
+	if DBType == "mysql" {
+		tableOptions = "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+	}
+	err := DB.Set("gorm:table_options", tableOptions).AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}

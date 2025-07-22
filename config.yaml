@@ -6,12 +6,18 @@ server:
   static_prefix: "/v1"
 
 database:
-  host: "118.178.241.13"
-  port: 3306
-  user: "auv"
-  password: "xBwKba5iFhbszSwK"
-  name: "auv"
-  ssl_mode: "disable"
+  # 切换数据库驱动
+  driver: "sqlite"
+  sqlite:
+    # SQLite数据库文件路径
+    path: "./db/auv.db"
+  mysql:
+    host: "localhost"
+    port: 3306
+    user: "auv"
+    password: "xBwKba5iFhbszSwK"
+    name: "auv"
+    ssl_mode: "disable"
 
 admin:
   username: "admin"

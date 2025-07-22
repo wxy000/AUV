@@ -48,7 +48,7 @@ async function request(endpoint, method = 'GET', body = null, includeAuth = true
     const result = await response.json();
     
     // 统一校验响应格式
-    if (typeof result.code === 'undefined' || !result.message || !result.data) {
+    if (typeof result.code === 'undefined' && !result.message && !result.data) {
       throw { 
         code: 500, 
         message: '非标准接口响应格式',
