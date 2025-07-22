@@ -32,7 +32,7 @@ func JWTAuth() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", token.Claims.(jwt.MapClaims)["sub"])
+		c.Set("userID", token.Claims.(jwt.MapClaims)["userid"])
 		c.Set("jwtClaims", token.Claims)
 	}
 }

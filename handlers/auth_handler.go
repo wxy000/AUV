@@ -52,7 +52,7 @@ func Login(c *gin.Context) {
 
 	// 生成JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":      user.ID,
+		"userid":   user.ID,
 		"username": user.Username,
 		"exp":      time.Now().Add(time.Hour * time.Duration(config.Cfg.JWT.ExpiresHours)).Unix(),
 	})
@@ -66,7 +66,6 @@ func Login(c *gin.Context) {
 	response.Success(c, gin.H{
 		"access_token": tokenString,
 		"expires_in":   config.Cfg.JWT.ExpiresHours * 3600,
-		"user_id":      user.ID,
 	})
 }
 
@@ -105,7 +104,7 @@ func RefreshToken(c *gin.Context) {
 	}
 
 	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":      userID,
+		"userid":   userID,
 		"username": user.Username,
 		"exp":      time.Now().Add(time.Hour * time.Duration(config.Cfg.JWT.ExpiresHours)).Unix(),
 	})
@@ -119,6 +118,5 @@ func RefreshToken(c *gin.Context) {
 	response.Success(c, gin.H{
 		"access_token": tokenString,
 		"expires_in":   config.Cfg.JWT.ExpiresHours * 3600,
-		"user_id":      user.ID,
 	})
 }

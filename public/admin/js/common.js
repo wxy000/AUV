@@ -89,7 +89,6 @@ async function saveUser(userData, userId = '') {
 // 认证相关
 function handleAuthError(redirect = true) {
   localStorage.removeItem('jwt');
-  localStorage.removeItem('userId');
   if(redirect) {
     Swal.fire({
       icon: 'error',
@@ -104,9 +103,19 @@ function handleAuthError(redirect = true) {
 // 初始化检查登录状态
 function checkLogin() {
   const jwt = localStorage.getItem('jwt');
-  const userId = localStorage.getItem('userId');
+  let userId;
   
-  if(!jwt || !userId) {
+  if(!jwt) {
+    window.location.href = '../admin/login.html';
+    return;
+  }
+
+  // 解析JWT获取userid
+  try {
+    const payload = jwt.split('.')[1];
+    const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    userId = decodedPayload.userid;
+  } catch (e) {
     window.location.href = '../admin/login.html';
     return;
   }
@@ -135,7 +144,6 @@ async function loginUser(username, password) {
     }
 
     localStorage.setItem('jwt', data.data.access_token);
-    localStorage.setItem('userId', data.data.user_id);
     return data.data;
   } catch (error) {
     console.error('登录错误:', error);
@@ -173,7 +181,6 @@ async function loginUser(username, password) {
 
 async function logout() {
     localStorage.removeItem('jwt');
-    localStorage.removeItem('userId');
     window.location.href = '../admin/login.html';
 }
 
