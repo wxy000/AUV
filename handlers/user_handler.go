@@ -5,12 +5,10 @@ import (
 	"AUV/config"
 	"AUV/db/repository"
 	"AUV/models"
-	"net/http"
-	"regexp"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"regexp"
 )
 
 func CreateUser(c *gin.Context) {
@@ -50,7 +48,7 @@ func CreateUser(c *gin.Context) {
 	}
 	user.Password = string(hashedPassword)
 
-	if err := repository.UserRepo.Create(&user); err != nil {
+	if err := repository.UserRepo.CreateUser(&user); err != nil {
 		response.Fail(c, http.StatusInternalServerError, "创建用户失败")
 		return
 	}
@@ -61,7 +59,7 @@ func CreateUser(c *gin.Context) {
 func GetUsers(c *gin.Context) {
 	var users []models.User
 
-	users, err := repository.UserRepo.GetAll()
+	users, err := repository.UserRepo.GetAllUserActive()
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, "查询用户失败")
 		return
@@ -73,7 +71,7 @@ func GetUsers(c *gin.Context) {
 func GetInactiveUsers(c *gin.Context) {
 	var users []models.User
 
-	users, err := repository.UserRepo.GetAllInActive()
+	users, err := repository.UserRepo.GetAllUserInActive()
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, "查询用户失败")
 		return
@@ -82,18 +80,29 @@ func GetInactiveUsers(c *gin.Context) {
 	response.Success(c, users)
 }
 
-func GetUser(c *gin.Context) {
-	userId := c.Param("userId")
-	// 将字符串类型的 userId 转换为 uint 类型
-	id, err := strconv.ParseUint(userId, 10, 64)
-	if err != nil {
-		response.Fail(c, http.StatusBadRequest, "无效的用户ID")
+func GetCurrentUser(c *gin.Context) {
+	// 从JWT获取用户ID
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Fail(c, http.StatusUnauthorized, "未找到用户信息")
 		return
 	}
 
+	user, err := repository.UserRepo.GetUserByID(userID.(string))
+	if err != nil {
+		response.Fail(c, http.StatusInternalServerError, "获取用户失败")
+		return
+	}
+
+	response.Success(c, user)
+}
+
+func GetUserByID(c *gin.Context) {
+	userId := c.Param("userId")
+
 	var user *models.User
 
-	user, err = repository.UserRepo.GetByID(uint(id))
+	user, err := repository.UserRepo.GetUserByID(userId)
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, "获取用户失败")
 		return
@@ -124,7 +133,7 @@ func UpdateUserStatus(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	userId := c.Param("userId")
 
-	if err := repository.UserRepo.DeleteUser(userId); err != nil {
+	if err := repository.UserRepo.DeleteUserByID(userId); err != nil {
 		response.Fail(c, http.StatusInternalServerError, "删除用户失败")
 		return
 	}
@@ -132,14 +141,14 @@ func DeleteUser(c *gin.Context) {
 	response.SuccessWithMessage(c, "删除用户成功", nil)
 }
 
-func UpdateUser(c *gin.Context) {
-	userId := c.Param("userId")
-	// 将字符串类型的 userId 转换为 uint 类型
-	id, err := strconv.ParseUint(userId, 10, 64)
-	if err != nil {
-		response.Fail(c, http.StatusBadRequest, "无效的用户ID")
+func UpdateCurrentUser(c *gin.Context) {
+	// 从JWT获取用户ID
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Fail(c, http.StatusUnauthorized, "未找到用户信息")
 		return
 	}
+
 	var updateData models.User
 
 	if err := c.ShouldBindJSON(&updateData); err != nil {
@@ -147,7 +156,33 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	if err := repository.UserRepo.UpdateInfo(uint(id), &models.User{
+	if err := repository.UserRepo.UpdateUserOtherInfo(userID.(string), &models.User{
+		Username: updateData.Username,
+		RealName: updateData.RealName,
+		Gender:   updateData.Gender,
+		Phone:    updateData.Phone,
+		Email:    updateData.Email,
+		Role:     updateData.Role,
+		Remark:   updateData.Remark,
+	}); err != nil {
+		response.Fail(c, http.StatusInternalServerError, "更新用户失败")
+		return
+	}
+
+	response.SuccessWithMessage(c, "用户更新成功", nil)
+}
+
+func UpdateUser(c *gin.Context) {
+	userId := c.Param("userId")
+
+	var updateData models.User
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
+		response.Fail(c, http.StatusBadRequest, "无效的请求格式")
+		return
+	}
+
+	if err := repository.UserRepo.UpdateUserOtherInfo(userId, &models.User{
 		Username: updateData.Username,
 		RealName: updateData.RealName,
 		Gender:   updateData.Gender,

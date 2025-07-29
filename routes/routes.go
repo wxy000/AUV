@@ -24,12 +24,23 @@ func SetupRoutes(router *gin.Engine) {
 		secureGroup := api.Group("/")
 		secureGroup.Use(middleware.JWTAuth())
 		{
+			// 获取所有活跃用户
 			secureGroup.GET("/getUsers", handlers.GetUsers)
+			// 获取所有失效用户
 			secureGroup.GET("/getInactiveUsers", handlers.GetInactiveUsers)
-			secureGroup.GET("/getUser/:userId", handlers.GetUser)
+			// 获取当前登录用户
+			secureGroup.GET("/getUser", handlers.GetCurrentUser)
+			// 获取指定id的用户
+			secureGroup.GET("/getUser/:userId", handlers.GetUserByID)
+			// 创建用户
 			secureGroup.POST("/createUser", handlers.CreateUser)
+			// 更新指定id用户状态
 			secureGroup.POST("/updateUserStatus/:userId", handlers.UpdateUserStatus)
+			// 更新当前登录用户信息
+			secureGroup.POST("/updateUser", handlers.UpdateCurrentUser)
+			// 更新指定id用户信息
 			secureGroup.POST("/updateUser/:userId", handlers.UpdateUser)
+			// 删除指定id用户
 			secureGroup.DELETE("/deleteUser/:userId", handlers.DeleteUser)
 			// 其他需要保护的路由...
 		}

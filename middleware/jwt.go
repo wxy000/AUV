@@ -24,6 +24,7 @@ func JWTAuth() gin.HandlerFunc {
 
 		if err != nil || !token.Valid {
 			if errors.Is(err, jwt.ErrTokenExpired) && c.Request.URL.Path == "/auth/refresh" {
+				c.Set("userID", token.Claims.(jwt.MapClaims)["userID"])
 				c.Set("jwtClaims", token.Claims)
 				c.Next()
 				return
@@ -32,7 +33,7 @@ func JWTAuth() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", token.Claims.(jwt.MapClaims)["userid"])
+		c.Set("userID", token.Claims.(jwt.MapClaims)["userID"])
 		c.Set("jwtClaims", token.Claims)
 	}
 }

@@ -23,7 +23,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	user, err := repository.UserRepo.GetByUsername(creds.Username)
+	user, err := repository.UserRepo.GetUserByUsername(creds.Username)
 	if err != nil {
 		response.Fail(c, http.StatusUnauthorized, "用户不存在")
 		return
@@ -45,15 +45,15 @@ func Login(c *gin.Context) {
 
 	// 更新最后登录时间
 	user.LastLogin = time.Now()
-	if updateErr := repository.UserRepo.Update(user); updateErr != nil {
+	if updateErr := repository.UserRepo.UpdateUserAllInfo(user); updateErr != nil {
 		response.Fail(c, http.StatusInternalServerError, "系统错误")
 		return
 	}
 
 	// 生成JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userid":   user.ID,
-		"username": user.Username,
+		"userID":   user.ID,
+		"userName": user.Username,
 		"exp":      time.Now().Add(time.Hour * time.Duration(config.Cfg.JWT.ExpiresHours)).Unix(),
 	})
 
@@ -65,7 +65,6 @@ func Login(c *gin.Context) {
 
 	response.Success(c, gin.H{
 		"access_token": tokenString,
-		"expires_in":   config.Cfg.JWT.ExpiresHours * 3600,
 	})
 }
 
@@ -77,7 +76,7 @@ func RefreshToken(c *gin.Context) {
 	}
 
 	// 通过userID查询用户信息
-	user, err := repository.UserRepo.GetByID(userID.(uint))
+	user, err := repository.UserRepo.GetUserByID(userID.(string))
 	if err != nil {
 		response.Fail(c, http.StatusUnauthorized, "用户不存在")
 		return
@@ -104,8 +103,8 @@ func RefreshToken(c *gin.Context) {
 	}
 
 	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userid":   userID,
-		"username": user.Username,
+		"userID":   userID,
+		"userName": user.Username,
 		"exp":      time.Now().Add(time.Hour * time.Duration(config.Cfg.JWT.ExpiresHours)).Unix(),
 	})
 
@@ -117,6 +116,5 @@ func RefreshToken(c *gin.Context) {
 
 	response.Success(c, gin.H{
 		"access_token": tokenString,
-		"expires_in":   config.Cfg.JWT.ExpiresHours * 3600,
 	})
 }
