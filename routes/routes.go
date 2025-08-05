@@ -17,8 +17,11 @@ func SetupRoutes(router *gin.Engine) {
 			authGroup.POST("/refresh", handlers.RefreshToken)
 		}
 
-		// 一言接口
-		api.GET("/hitokoto", handlers.GetHitokoto)
+		appGroup := api.Group("/app")
+		{
+			// 一言接口
+			appGroup.GET("/hitokoto", handlers.GetHitokoto)
+		}
 
 		// 需要JWT认证的路由
 		secureGroup := api.Group("/")
